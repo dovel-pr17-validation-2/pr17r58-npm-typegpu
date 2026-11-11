@@ -1,0 +1,167 @@
+import { act, render } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, vi } from 'vitest';
+import type { TgpuRoot } from 'typegpu';
+import { Root, useRootWithStatus } from '@typegpu/react';
+import { useEffect } from 'react';
+import { it } from './utils/extended-test.tsx';
+
+describe('Root unmount cleanup', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should not destroy own root on unmount', async () => {
+    let capturedRoot: TgpuRoot | undefined;
+
+    function TestConsumer() {
+      const result = useRootWithStatus();
+
+      useEffect(() => {
+        if (result.status === 'fulfilled') {
+          capturedRoot = result.value;
+        }
+      });
+
+      return null;
+    }
+
+    const { unmount } = render(
+      <Root>
+        <TestConsumer />
+      </Root>,
+    );
+
+    // Flush microtasks so tgpu.init() resolves and React re-renders
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(capturedRoot).toBeDefined();
+    const destroySpy = vi.spyOn(capturedRoot!, 'destroy');
+    const deviceDestroySpy = vi.spyOn(capturedRoot!.device, 'destroy');
+
+    unmount();
+    vi.runAllTimers();
+
+    // Destroying the device would break canvas contexts that are still configured with it,
+    // so the root is left for the garbage collector instead
+    expect(destroySpy).not.toHaveBeenCalled();
+    expect(deviceDestroySpy).not.toHaveBeenCalled();
+  });
+
+  it('should not throw when existing root unmounts', async ({ RootWrapper }) => {
+    const { unmount } = render(<div />, { wrapper: RootWrapper });
+    expect(() => unmount()).not.toThrow();
+  });
+
+  it('should pass options to owned root init', async ({ adapter }) => {
+    function TestConsumer() {
+      useRootWithStatus();
+      return null;
+    }
+
+    render(
+      <Root options={{ device: { optionalFeatures: ['timestamp-query'] } }}>
+        <TestConsumer />
+      </Root>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(adapter.requestDevice.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          {
+            "requiredFeatures": [
+              "timestamp-query",
+            ],
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('should not destroy root when init promise resolves after unmount', async ({
+    stallDeviceRequest,
+  }) => {
+    const resume = stallDeviceRequest();
+
+    function TestConsumer() {
+      useRootWithStatus();
+      return null;
+    }
+
+    const { unmount } = render(
+      <Root>
+        <TestConsumer />
+      </Root>,
+    );
+
+    // Unmount and run deferred cleanup before init resolves
+    unmount();
+    vi.runAllTimers();
+
+    // Resolve init after context has been destroyed
+    const device = await resume();
+    const destroySpy = vi.spyOn(device, 'destroy');
+
+    // Flush microtasks so the .then() callback runs
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(destroySpy).not.toHaveBeenCalled();
+  });
+
+  describe('React StrictMode compatibility', () => {
+    it('should survive the double mount/unmount cycle', async () => {
+      let capturedRoot: TgpuRoot | undefined;
+
+      function TestConsumer() {
+        const result = useRootWithStatus();
+
+        useEffect(() => {
+          if (result.status === 'fulfilled') {
+            capturedRoot = result.value;
+          }
+        });
+
+        return null;
+      }
+
+      const { unmount } = render(
+        <Root>
+          <TestConsumer />
+        </Root>,
+        { reactStrictMode: true },
+      );
+
+      // Flush microtasks so tgpu.init() resolves and React re-renders
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(capturedRoot).toBeDefined();
+
+      // Run any pending deferred cleanup timeouts (from StrictMode's first mount)
+      vi.runAllTimers();
+
+      // Root should still be usable (deferred cleanup was cancelled by remount)
+      expect(capturedRoot!.device.destroy).not.toHaveBeenCalled();
+      const destroySpy = vi.spyOn(capturedRoot!, 'destroy');
+      expect(destroySpy).not.toHaveBeenCalled();
+
+      // Now actually unmount
+      unmount();
+      vi.runAllTimers();
+
+      expect(destroySpy).not.toHaveBeenCalled();
+    });
+  });
+});

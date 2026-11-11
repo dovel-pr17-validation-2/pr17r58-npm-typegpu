@@ -1,0 +1,21 @@
+import { PixelRatio } from 'react-native';
+
+import {
+  createUseConfigureContextHook,
+  type UseResizerHook,
+} from '../core/use-configure-context.ts';
+import useStableEvent from '../core/use-stable-event.ts';
+
+const useResizer: UseResizerHook = (onResize) => {
+  const attachResizing = useStableEvent((el: HTMLCanvasElement | OffscreenCanvas | null) => {
+    // TODO(#2460): Listen for size changes and resize canvas
+    if (el && 'clientWidth' in el) {
+      const pixelRatio = PixelRatio.get();
+      onResize(Math.round(el.clientWidth * pixelRatio), Math.round(el.clientHeight * pixelRatio));
+    }
+  });
+
+  return { attachResizing };
+};
+
+export const useConfigureContext = createUseConfigureContextHook(useResizer);

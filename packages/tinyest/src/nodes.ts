@@ -1,0 +1,319 @@
+//
+// Statement
+//
+
+export const NodeTypeCatalog = {
+  // frequent
+  block: 0,
+  binaryExpr: 1,
+  assignmentExpr: 2,
+  logicalExpr: 3,
+  unaryExpr: 4,
+  numericLiteral: 5,
+  call: 6,
+  memberAccess: 7,
+  indexAccess: 8,
+  identifier: 9,
+
+  // regular
+  return: 10,
+  if: 11,
+  let: 12,
+  const: 13,
+  for: 14,
+  while: 15,
+  continue: 16,
+  break: 17,
+  forOf: 18,
+  switch: 19,
+
+  // rare
+  arrayExpr: 100,
+  preUpdate: 101,
+  postUpdate: 102,
+  stringLiteral: 103,
+  objectExpr: 104,
+  conditionalExpr: 105,
+  nullLiteral: 106,
+  booleanLiteral: 107,
+} as const;
+
+export type NodeTypeCatalog = typeof NodeTypeCatalog;
+
+/** Identifier can either be encoded as a node, or as a plain string */
+export type Identifier = string | readonly [type: NodeTypeCatalog['identifier'], id: string];
+
+/**
+ * Represents a return statement
+ */
+export type Return =
+  | readonly [type: NodeTypeCatalog['return'], expr: Expression]
+  | readonly [type: NodeTypeCatalog['return']];
+
+/**
+ * Represents an if statement
+ */
+export type If =
+  | readonly [type: NodeTypeCatalog['if'], cond: Expression, then: Statement]
+  | readonly [type: NodeTypeCatalog['if'], cond: Expression, then: Statement, alt: Statement];
+
+/**
+ * Represents a block of statements
+ */
+export type Block = readonly [type: NodeTypeCatalog['block'], Statement[]];
+
+/**
+ * Represents a let statement
+ */
+export type Let =
+  | readonly [type: NodeTypeCatalog['let'], identifier: Identifier]
+  | readonly [type: NodeTypeCatalog['let'], identifier: Identifier, value: Expression];
+
+/**
+ * Represents a const statement
+ */
+export type Const =
+  | readonly [type: NodeTypeCatalog['const'], identifier: Identifier]
+  | readonly [type: NodeTypeCatalog['const'], identifier: Identifier, value: Expression];
+
+export type For = readonly [
+  type: NodeTypeCatalog['for'],
+  init: Statement | null,
+  condition: Expression | null,
+  update: Statement | null,
+  body: Statement,
+];
+
+export type While = readonly [
+  type: NodeTypeCatalog['while'],
+  condition: Expression,
+  body: Statement,
+];
+
+export type Continue = readonly [type: NodeTypeCatalog['continue']];
+
+export type Break = readonly [type: NodeTypeCatalog['break']];
+
+export type ForOf = readonly [
+  type: NodeTypeCatalog['forOf'],
+  left: Const | Let,
+  right: Expression,
+  body: Statement,
+];
+
+export type Switch = readonly [
+  type: NodeTypeCatalog['switch'],
+  discriminant: Expression,
+  cases: readonly (readonly [test: Expression | null, consequent: readonly Statement[]])[],
+];
+
+/**
+ * A union type of all statements
+ */
+export type Statement =
+  | Return
+  | If
+  | Block
+  | Let
+  | Const
+  | Expression
+  | For
+  | While
+  | Continue
+  | Break
+  | ForOf
+  | Switch;
+
+//
+// Expression
+//
+
+export type BinaryOperator =
+  | '=='
+  | '!='
+  | '==='
+  | '!=='
+  | '<'
+  | '<='
+  | '>'
+  | '>='
+  | '<<'
+  | '>>'
+  | '>>>'
+  | '+'
+  | '-'
+  | '*'
+  | '/'
+  | '%'
+  | '|'
+  | '^'
+  | '&'
+  | 'in'
+  | 'instanceof'
+  | '**';
+
+export type BinaryExpression = readonly [
+  type: NodeTypeCatalog['binaryExpr'],
+  lhs: Expression,
+  op: BinaryOperator,
+  rhs: Expression,
+];
+
+export type AssignmentOperator =
+  | '='
+  | '+='
+  | '-='
+  | '*='
+  | '/='
+  | '%='
+  | '<<='
+  | '>>='
+  | '|='
+  | '^='
+  | '&='
+  | '**='
+  | '||='
+  | '&&='
+  | '>>>='
+  | '??=';
+
+export type AssignmentExpression = readonly [
+  type: NodeTypeCatalog['assignmentExpr'],
+  lhs: Expression,
+  op: AssignmentOperator,
+  rhs: Expression,
+];
+
+export type LogicalOperator = '&&' | '||' | '??';
+
+export type LogicalExpression = readonly [
+  type: NodeTypeCatalog['logicalExpr'],
+  lhs: Expression,
+  op: LogicalOperator,
+  rhs: Expression,
+];
+
+export type UnaryOperator = '-' | '+' | '!' | '~' | 'typeof' | 'void' | 'delete';
+
+export type UnaryExpression = readonly [
+  type: NodeTypeCatalog['unaryExpr'],
+  op: UnaryOperator,
+  inner: Expression,
+];
+
+export type ObjectProperty =
+  | readonly [key: string, value: Expression, computed: false]
+  | readonly [key: Expression, value: Expression, computed: true];
+
+export type ObjectExpression = readonly [
+  type: NodeTypeCatalog['objectExpr'],
+  props: Record<string, Expression> | ObjectProperty[],
+];
+
+export type ArrayExpression = readonly [type: NodeTypeCatalog['arrayExpr'], values: Expression[]];
+
+export type ConditionalExpression = readonly [
+  type: NodeTypeCatalog['conditionalExpr'],
+  test: Expression,
+  consequent: Expression,
+  alternative: Expression,
+];
+
+export type MemberAccess = readonly [
+  type: NodeTypeCatalog['memberAccess'],
+  object: Expression,
+  member: Identifier,
+];
+
+export type IndexAccess = readonly [
+  type: NodeTypeCatalog['indexAccess'],
+  object: Expression,
+  property: Expression,
+];
+
+export type Call = readonly [
+  type: NodeTypeCatalog['call'],
+  identifier: Expression,
+  args: Expression[],
+];
+
+export type PostUpdate = readonly [
+  type: NodeTypeCatalog['postUpdate'],
+  operator: '++' | '--',
+  argument: Expression,
+];
+
+export type PreUpdate = readonly [
+  type: NodeTypeCatalog['preUpdate'],
+  operator: '++' | '--',
+  argument: Expression,
+];
+
+/** A numeric literal */
+export type Num = readonly [type: NodeTypeCatalog['numericLiteral'], string];
+
+/** A string literal */
+export type Str = readonly [type: NodeTypeCatalog['stringLiteral'], string];
+
+/** null literal */
+export type Null = readonly [type: NodeTypeCatalog['nullLiteral']];
+
+/** boolean can either be encoded as a node, or as a plain literal */
+export type Bool = boolean | readonly [type: NodeTypeCatalog['booleanLiteral'], boolean];
+
+export type Literal = Num | Str | Bool | Null;
+
+export type Expression =
+  | Identifier
+  | BinaryExpression
+  | AssignmentExpression
+  | LogicalExpression
+  | UnaryExpression
+  | ObjectExpression
+  | MemberAccess
+  | IndexAccess
+  | ArrayExpression
+  | ConditionalExpression
+  | PreUpdate
+  | PostUpdate
+  | Call
+  | Literal;
+
+export type AnyNode = Statement | Expression;
+
+export const FuncParameterType = {
+  identifier: 'i',
+  destructuredObject: 'd',
+} as const;
+
+export type FuncParameter =
+  | {
+      type: typeof FuncParameterType.identifier;
+      name: string;
+    }
+  | {
+      type: typeof FuncParameterType.destructuredObject;
+      props: {
+        name: string;
+        alias: string;
+      }[];
+    };
+
+/**
+ * Map from an array/node to its source.
+ *
+ * Note that you can also map object properties, switch cases etc.,
+ * despite them not appearing in NodeTypeCatalog.
+ */
+export type SourceMap = Map<AnyNode | readonly unknown[], [line: number, column: number]>;
+
+const sourceMappedBrand = Symbol();
+/**
+ * This type represents a node that has been source mapped.
+ *
+ * The brand is just a type-level marker, and does not exist in runtime.
+ * SourceMappedNode is guaranteed to be serializable via {@link JSON.stringify}.
+ *
+ * The intended way of stripping source maps is via the {@link stripSourceMap} function.
+ */
+export type SourceMappedNode = { [sourceMappedBrand]: true };
