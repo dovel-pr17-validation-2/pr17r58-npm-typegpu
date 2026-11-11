@@ -58,7 +58,7 @@
     "react-dom": "catalog:",
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0",
-    "remeda": "^2.21.2",
+    "remeda": "^2.58.0",
     "sharp": "^0.35.5",
     "starlight-blog": "^0.30.0",
     "starlight-typedoc": "^0.23.0",

@@ -17,7 +17,7 @@
     "execa": "^9.6.0",
     "is-unicode-supported": "^2.1.0",
     "pkg-types": "^2.1.0",
-    "remeda": "^2.21.2"
+    "remeda": "^2.58.0"
   },
   "devDependencies": {
     "@types/node": "catalog:types"
