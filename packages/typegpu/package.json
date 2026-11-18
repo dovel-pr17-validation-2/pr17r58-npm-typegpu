@@ -98,7 +98,7 @@
   },
   "devDependencies": {
     "@ark/attest": "^0.56.0",
-    "@babel/standalone": "^7.28.6",
+    "@babel/standalone": "^8.1.2",
     "@typegpu/tgpu-dev-cli": "workspace:*",
     "@types/babel__standalone": "^7.1.9",
     "@types/node": "catalog:types",
