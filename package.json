@@ -54,7 +54,7 @@
     "oxfmt": "^0.35.0",
     "oxlint": "^1.57.0",
     "oxlint-tsgolint": "^0.17.4",
-    "pkg-pr-new": "^0.0.66",
+    "pkg-pr-new": "^0.0.93",
     "prettier": "^3.9.5",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.8.1",
