@@ -67,7 +67,7 @@
     "tsover-monaco-editor": "^0.55.1",
     "typed-binary": "^4.3.4",
     "typedoc": "^0.28.17",
-    "typedoc-plugin-markdown": "4.10.0",
+    "typedoc-plugin-markdown": "4.14.1",
     "typegpu": "workspace:*",
     "typescript": "catalog:types",
     "unplugin-typegpu": "workspace:*",
